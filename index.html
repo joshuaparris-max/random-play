@@ -1,21 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Random Play Redirect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Play</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f0f17;
+      color: #e8e8f0;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+    .card {
+      max-width: 480px;
+    }
+    h1 { font-size: 1.8rem; margin-bottom: 8px; }
+    p { color: #a0a0b8; line-height: 1.6; }
+    a.btn {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 12px 22px;
+      background: #6c5ce7;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+    code { background: #1e1e2c; padding: 2px 6px; border-radius: 4px; }
+    #status { margin-top: 14px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🎲 Random Play</h1>
+    <p id="status">Picking a random track for you…</p>
+    <div id="fallback" style="display:none">
+      <p>Couldn't load the track list. This usually means
+        <code>links.json</code> is missing or empty.</p>
+      <p>Add an array of URLs to <code>links.json</code> to enable random redirects.</p>
+    </div>
+  </div>
   <script>
     fetch('links.json')
-      .then(response => response.json())
+      .then(r => { if (!r.ok) throw new Error('not ok'); return r.json(); })
       .then(links => {
+        if (!Array.isArray(links) || links.length === 0) throw new Error('empty');
         const chosen = links[Math.floor(Math.random() * links.length)];
+        document.getElementById('status').textContent = 'Redirecting…';
         window.location.replace(chosen);
       })
       .catch(() => {
-        document.body.innerHTML = "<h2>Could not load links. Please check links.json.</h2>";
+        document.getElementById('status').style.display = 'none';
+        document.getElementById('fallback').style.display = 'block';
       });
   </script>
-</head>
-<body>
-  <h2>Redirecting to a random track...</h2>
 </body>
 </html>
