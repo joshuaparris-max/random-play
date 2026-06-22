@@ -1,5 +1,47 @@
-[
-  "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-  "https://www.youtube.com/watch?v=y6120QOlsfU",
-  "https://www.youtube.com/watch?v=5qap5aO4i9A"
-]
+{
+  "categories": [
+    {
+      "id": "music",
+      "label": "Music",
+      "emoji": "🎵",
+      "items": [
+        { "title": "Lofi beats to relax", "url": "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
+        { "title": "Classical focus mix", "url": "https://www.youtube.com/watch?v=jgpJVI3tDbY" }
+      ]
+    },
+    {
+      "id": "focus",
+      "label": "Focus",
+      "emoji": "🎯",
+      "items": [
+        { "title": "Deep work ambience", "url": "https://www.youtube.com/watch?v=5qap5aO4i9A" },
+        { "title": "Brown noise", "url": "https://www.youtube.com/watch?v=RqzGzwTY-6w" }
+      ]
+    },
+    {
+      "id": "reflection",
+      "label": "Worship / Reflection",
+      "emoji": "🕊️",
+      "items": [
+        { "title": "Quiet instrumental worship", "url": "https://www.youtube.com/watch?v=Cs3Gc4qiXG4" }
+      ]
+    },
+    {
+      "id": "family",
+      "label": "Kids / Family",
+      "emoji": "🧸",
+      "items": [
+        { "title": "Family sing-along playlist", "url": "https://www.youtube.com/results?search_query=kids+sing+along" }
+      ]
+    },
+    {
+      "id": "fun",
+      "label": "Fun",
+      "emoji": "🎲",
+      "items": [
+        { "title": "Random Wikipedia article", "url": "https://en.wikipedia.org/wiki/Special:Random" },
+        { "title": "A random useless website", "url": "https://theuselessweb.com/" }
+      ]
+    }
+  ]
+}
