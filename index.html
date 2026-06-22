@@ -1,63 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Random Play</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #0f0f17;
-      color: #e8e8f0;
-      min-height: 100vh;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 24px;
-    }
-    .card {
-      max-width: 480px;
-    }
-    h1 { font-size: 1.8rem; margin-bottom: 8px; }
-    p { color: #a0a0b8; line-height: 1.6; }
-    a.btn {
-      display: inline-block;
-      margin-top: 16px;
-      padding: 12px 22px;
-      background: #6c5ce7;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 8px;
-    }
-    code { background: #1e1e2c; padding: 2px 6px; border-radius: 4px; }
-    #status { margin-top: 14px; font-size: 0.9rem; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>random-play — Surprise Me</title>
+<style>
+  :root { --bg:#0f1020; --card:#1a1c33; --accent:#7c6cff; --accent2:#43d1b8; --text:#ececff; --muted:#9aa0c0; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:radial-gradient(circle at 30% 0%,#1a1c3a,#0f1020); color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .wrap { max-width:560px; width:100%; text-align:center; }
+  h1 { font-size:2.2rem; margin-bottom:6px; }
+  .tag { color:var(--muted); margin-bottom:24px; }
+  .cats { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:20px; }
+  .cat { background:var(--card); border:1px solid #2b2e52; color:var(--text); padding:8px 14px; border-radius:999px; cursor:pointer; font-size:.9rem; transition:.15s; }
+  .cat.active { background:var(--accent); border-color:var(--accent); }
+  .surprise { background:linear-gradient(120deg,var(--accent),var(--accent2)); border:none; color:#fff; font-size:1.2rem; font-weight:700; padding:16px 32px; border-radius:14px; cursor:pointer; box-shadow:0 10px 30px -10px var(--accent); transition:transform .1s; }
+  .surprise:active { transform:scale(.97); }
+  .result { margin-top:24px; background:var(--card); border:1px solid #2b2e52; border-radius:14px; padding:20px; display:none; }
+  .result.show { display:block; }
+  .result .title { font-size:1.1rem; font-weight:600; margin-bottom:4px; }
+  .result .url { color:var(--muted); font-size:.8rem; word-break:break-all; margin-bottom:14px; }
+  .actions { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .btn { background:#262a4d; border:1px solid #353a66; color:var(--text); padding:9px 16px; border-radius:10px; cursor:pointer; font-size:.85rem; text-decoration:none; display:inline-block; }
+  .btn.primary { background:var(--accent); border-color:var(--accent); }
+  .err { color:#ff9b9b; margin-top:16px; display:none; }
+  footer { margin-top:28px; color:var(--muted); font-size:.78rem; }
+  footer a { color:var(--accent2); }
+</style>
 </head>
 <body>
-  <div class="card">
-    <h1>🎲 Random Play</h1>
-    <p id="status">Picking a random track for you…</p>
-    <div id="fallback" style="display:none">
-      <p>Couldn't load the track list. This usually means
-        <code>links.json</code> is missing or empty.</p>
-      <p>Add an array of URLs to <code>links.json</code> to enable random redirects.</p>
+<div class="wrap">
+  <h1>🎲 random-play</h1>
+  <p class="tag">A "surprise me" launcher. Pick a vibe, get a random pick — your choice to open it.</p>
+  <div class="cats" id="cats"></div>
+  <button class="surprise" id="surprise">✨ Surprise me</button>
+  <div class="result" id="result">
+    <div class="title" id="rTitle"></div>
+    <div class="url" id="rUrl"></div>
+    <div class="actions">
+      <a class="btn primary" id="rOpen" target="_blank" rel="noopener">Open in new tab ↗</a>
+      <button class="btn" id="rCopy">Copy link</button>
+      <button class="btn" id="rAgain">Roll again</button>
     </div>
   </div>
-  <script>
-    fetch('links.json')
-      .then(r => { if (!r.ok) throw new Error('not ok'); return r.json(); })
-      .then(links => {
-        if (!Array.isArray(links) || links.length === 0) throw new Error('empty');
-        const chosen = links[Math.floor(Math.random() * links.length)];
-        document.getElementById('status').textContent = 'Redirecting…';
-        window.location.replace(chosen);
-      })
-      .catch(() => {
-        document.getElementById('status').style.display = 'none';
-        document.getElementById('fallback').style.display = 'block';
-      });
-  </script>
+  <div class="err" id="err"></div>
+  <div id="recent" style="margin-top:18px;text-align:left"></div>
+  <footer>Press <kbd>Space</kbd> to roll. Add your own picks by editing <code>links.json</code>. Nothing is tracked or sent anywhere.</footer>
+</div>
+<script>
+let data = null, activeCat = "all";
+const $ = id => document.getElementById(id);
+
+fetch('links.json').then(r => { if(!r.ok) throw 0; return r.json(); })
+  .then(d => { data = d; renderCats(); })
+  .catch(() => { $('err').style.display='block'; $('err').textContent='Could not load links.json. Using a tiny built-in fallback.'; data = { categories:[{id:'fun',label:'Fun',emoji:'🎲',items:[{title:'Random Wikipedia',url:'https://en.wikipedia.org/wiki/Special:Random'}]}] }; renderCats(); });
+
+function renderCats(){
+  const c = $('cats'); c.innerHTML='';
+  const all = mk('✨ All','all'); c.appendChild(all);
+  data.categories.forEach(cat => c.appendChild(mk(cat.emoji+' '+cat.label, cat.id)));
+  setActive('all');
+}
+function mk(label,id){ const b=document.createElement('button'); b.className='cat'; b.textContent=label; b.dataset.id=id; b.onclick=()=>setActive(id); return b; }
+function setActive(id){ activeCat=id; document.querySelectorAll('.cat').forEach(b=>b.classList.toggle('active',b.dataset.id===id)); }
+
+function pool(){
+  let items=[];
+  data.categories.forEach(cat=>{ if(activeCat==='all'||activeCat===cat.id) items=items.concat(cat.items); });
+  return items;
+}
+let lastUrl=null;
+const HKEY='randomplay_history';
+function hist(){ try{ return JSON.parse(localStorage.getItem(HKEY))||[]; }catch(e){ return []; } }
+function roll(){
+  const items=pool();
+  if(!items.length){ $('err').style.display='block'; $('err').textContent='No links in this category yet.'; return; }
+  $('err').style.display='none';
+  let choices=items.filter(i=>i.url!==lastUrl); if(!choices.length) choices=items;
+  const pick=choices[Math.floor(Math.random()*choices.length)];
+  lastUrl=pick.url;
+  // little spin animation on the button
+  $('surprise').animate([{transform:'rotate(0)'},{transform:'rotate(360deg)'}],{duration:400});
+  $('rTitle').textContent=pick.title;
+  $('rUrl').textContent=pick.url;
+  $('rOpen').href=pick.url;
+  $('result').classList.add('show');
+  $('rCopy').textContent='Copy link';
+  const h=hist(); h.unshift({title:pick.title,url:pick.url,at:Date.now()}); localStorage.setItem(HKEY,JSON.stringify(h.slice(0,12))); renderRecent();
+}
+function renderRecent(){
+  const h=hist(); const el=$('recent');
+  if(!h.length){ el.innerHTML=''; return; }
+  el.innerHTML='<div style="color:var(--muted);font-size:.78rem;margin-bottom:6px">Recent picks</div>'+h.slice(0,6).map(x=>`<a href="${x.url}" target="_blank" rel="noopener" style="display:block;color:var(--text);text-decoration:none;font-size:.85rem;padding:4px 0;border-bottom:1px solid #262a4d">↳ ${x.title}</a>`).join('');
+}
+$('surprise').onclick=roll;
+$('rAgain').onclick=roll;
+document.addEventListener('keydown',e=>{ if(e.code==='Space' && e.target.tagName!=='INPUT'){ e.preventDefault(); roll(); } });
+renderRecent();
+$('rCopy').onclick=()=>{ navigator.clipboard.writeText($('rUrl').textContent).then(()=>$('rCopy').textContent='Copied ✓'); };
+</script>
 </body>
 </html>

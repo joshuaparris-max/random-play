@@ -1,38 +1,36 @@
-# 🎲 Random Play
+# 🎲 random-play — Serendipity Player
 
-A tiny single-page web experiment: when you open it, it picks a **random link** from a list and redirects you there. Handy as a "surprise me" launcher for music tracks, videos, or any set of URLs.
+A tiny "surprise me" launcher. Pick a vibe (Music, Focus, Worship/Reflection, Kids/Family,
+Fun), hit **Surprise me**, and get one random pick — shown on a landing card so *you* decide
+whether to open it. No auto-redirect, no tracking, nothing sent anywhere.
 
-## How it works
+## Features
 
-- `index.html` fetches `links.json` (a plain array of URLs).
-- It picks one at random and redirects the browser to it.
-- If `links.json` is missing or empty, it now shows a **friendly fallback page** instead of a broken error.
+- Landing page with category filters (no surprise redirect-on-load).
+- **Surprise me** picks a random item from the selected category (or All).
+- **Open in new tab**, **Copy link**, and **Roll again** actions.
+- Graceful fallback if `links.json` is missing or empty.
+- Fully static — one `index.html` + `links.json`.
 
-## Configure your links
+## Add your own links
 
-Edit `links.json` — just an array of URLs:
+Edit [`links.json`](links.json). Each category has an `id`, `label`, `emoji`, and `items`:
 
 ```json
-[
-  "https://example.com/track-1",
-  "https://example.com/track-2"
-]
+{ "id": "music", "label": "Music", "emoji": "🎵",
+  "items": [ { "title": "Lofi beats", "url": "https://..." } ] }
 ```
 
-The included list contains a few placeholder YouTube links — replace them with your own.
+## Run
 
-## How to run
-
-Because it uses `fetch()`, open it via a local server (not `file://`):
+It uses `fetch()`, so serve it over HTTP (not `file://`):
 
 ```bash
-python -m http.server 8000
-# then visit http://localhost:8000
+python -m http.server 8000   # then open http://localhost:8000
 ```
 
-Or deploy the folder to any static host (GitHub Pages, Netlify, etc.).
+Or open the live GitHub Pages build.
 
 ## Status
 
-**Tiny experiment — working.** Intentionally minimal: one HTML file plus a JSON list.
-Not intended to grow into a larger app.
+See [STATUS.md](STATUS.md). **Working MVP** — categories, random pick, copy/open, fallback.
