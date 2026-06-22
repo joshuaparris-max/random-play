@@ -44,7 +44,8 @@
     </div>
   </div>
   <div class="err" id="err"></div>
-  <footer>Add your own picks by editing <code>links.json</code>. See the README. Nothing is tracked or sent anywhere.</footer>
+  <div id="recent" style="margin-top:18px;text-align:left"></div>
+  <footer>Press <kbd>Space</kbd> to roll. Add your own picks by editing <code>links.json</code>. Nothing is tracked or sent anywhere.</footer>
 </div>
 <script>
 let data = null, activeCat = "all";
@@ -68,19 +69,34 @@ function pool(){
   data.categories.forEach(cat=>{ if(activeCat==='all'||activeCat===cat.id) items=items.concat(cat.items); });
   return items;
 }
+let lastUrl=null;
+const HKEY='randomplay_history';
+function hist(){ try{ return JSON.parse(localStorage.getItem(HKEY))||[]; }catch(e){ return []; } }
 function roll(){
   const items=pool();
   if(!items.length){ $('err').style.display='block'; $('err').textContent='No links in this category yet.'; return; }
   $('err').style.display='none';
-  const pick=items[Math.floor(Math.random()*items.length)];
+  let choices=items.filter(i=>i.url!==lastUrl); if(!choices.length) choices=items;
+  const pick=choices[Math.floor(Math.random()*choices.length)];
+  lastUrl=pick.url;
+  // little spin animation on the button
+  $('surprise').animate([{transform:'rotate(0)'},{transform:'rotate(360deg)'}],{duration:400});
   $('rTitle').textContent=pick.title;
   $('rUrl').textContent=pick.url;
   $('rOpen').href=pick.url;
   $('result').classList.add('show');
   $('rCopy').textContent='Copy link';
+  const h=hist(); h.unshift({title:pick.title,url:pick.url,at:Date.now()}); localStorage.setItem(HKEY,JSON.stringify(h.slice(0,12))); renderRecent();
+}
+function renderRecent(){
+  const h=hist(); const el=$('recent');
+  if(!h.length){ el.innerHTML=''; return; }
+  el.innerHTML='<div style="color:var(--muted);font-size:.78rem;margin-bottom:6px">Recent picks</div>'+h.slice(0,6).map(x=>`<a href="${x.url}" target="_blank" rel="noopener" style="display:block;color:var(--text);text-decoration:none;font-size:.85rem;padding:4px 0;border-bottom:1px solid #262a4d">↳ ${x.title}</a>`).join('');
 }
 $('surprise').onclick=roll;
 $('rAgain').onclick=roll;
+document.addEventListener('keydown',e=>{ if(e.code==='Space' && e.target.tagName!=='INPUT'){ e.preventDefault(); roll(); } });
+renderRecent();
 $('rCopy').onclick=()=>{ navigator.clipboard.writeText($('rUrl').textContent).then(()=>$('rCopy').textContent='Copied ✓'); };
 </script>
 </body>
